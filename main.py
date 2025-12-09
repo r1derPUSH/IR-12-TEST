@@ -8,12 +8,12 @@ from functools import wraps
 # ==========================
 
 class FileNotFound(Exception):
-    """Файл не знайдено."""
+    """File not found."""
     pass
 
 
 class FileCorrupted(Exception):
-    """Файл пошкоджений або недоступний."""
+    """File is corrupted or inaccessible."""
     pass
 
 
@@ -23,9 +23,9 @@ class FileCorrupted(Exception):
 
 def logged(exception_type, mode="console"):
     """
-    Декоратор для логування помилок.
-    mode = "console" → лог в консоль
-    mode = "file"    → лог у log.txt
+    Decorator for logging errors.
+    mode = "console" → log to console
+    mode = "file"    → log to log.txt
     """
 
     def decorator(func):
@@ -36,11 +36,11 @@ def logged(exception_type, mode="console"):
             logger = logging.getLogger(func.__name__)
             logger.setLevel(logging.ERROR)
 
-            # Видалити старі хендлери, щоб не дублювалися
+            # Remove previous handlers to avoid duplicates
             if logger.hasHandlers():
                 logger.handlers.clear()
 
-            # Обираємо режим
+            # Select logging mode
             if mode == "console":
                 handler = logging.StreamHandler()
             else:
@@ -73,16 +73,16 @@ class WorkWithFile:
     def __init__(self, filename: str):
         self.filename = filename
 
-        # Перевірка існування
+        # Check existence
         if not os.path.exists(self.filename):
-            raise FileNotFound(f"Файл '{self.filename}' не знайдено!")
+            raise FileNotFound(f"File '{self.filename}' not found!")
 
-        # Перевірка доступу
+        # Check accessibility
         try:
             with open(self.filename, "r", encoding="utf-8"):
                 pass
         except Exception:
-            raise FileCorrupted("Файл пошкоджений або недоступний!")
+            raise FileCorrupted("File is corrupted or inaccessible!")
 
     # --------------------------
     #           READ
@@ -93,7 +93,7 @@ class WorkWithFile:
             with open(self.filename, "r", encoding="utf-8") as f:
                 return f.read()
         except Exception as e:
-            raise FileCorrupted("Не вдалося прочитати файл") from e
+            raise FileCorrupted("Failed to read file") from e
 
     # --------------------------
     #           WRITE
@@ -104,7 +104,7 @@ class WorkWithFile:
             with open(self.filename, "w", encoding="utf-8") as f:
                 f.write(text)
         except Exception as e:
-            raise FileCorrupted("Помилка запису у файл") from e
+            raise FileCorrupted("Failed to write to file") from e
 
     # --------------------------
     #           APPEND
@@ -115,7 +115,7 @@ class WorkWithFile:
             with open(self.filename, "a", encoding="utf-8") as f:
                 f.write(text)
         except Exception as e:
-            raise FileCorrupted("Не вдалося дописати у файл") from e
+            raise FileCorrupted("Failed to append to file") from e
 
 
 # ==========================
