@@ -8,31 +8,24 @@ from functools import wraps
 # ==========================
 
 class FileNotFound(Exception):
-    """File not found."""
     pass
 
 
 class FileCorrupted(Exception):
-    """File is corrupted or inaccessible."""
     pass
 
 
 # ==========================
-#   GLOBAL LOGGER CONFIG
+#   LOGGER CONFIG
 # ==========================
 
 def configure_logger(mode="console"):
     logger = logging.getLogger("file_logger")
     logger.setLevel(logging.ERROR)
 
-    # Avoid duplicate handlers
     if not logger.handlers:
-        if mode == "console":
-            handler = logging.StreamHandler()
-        else:
-            handler = logging.FileHandler("log.txt")
-
-        formatter = logging.Formatter("%(asctime)s - %(name)s - %(message)s")
+        handler = logging.StreamHandler() if mode == "console" else logging.FileHandler("log.txt")
+        formatter = logging.Formatter("%(asctime)s - %(message)s")
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
@@ -40,16 +33,10 @@ def configure_logger(mode="console"):
 
 
 # ==========================
-#     DECORATOR logged
+#      DECORATOR
 # ==========================
 
 def logged(exception_type, mode="console"):
-    """
-    Decorator for logging errors.
-    mode = "console" → log to console
-    mode = "file"    → log to log.txt
-    """
-
     logger = configure_logger(mode)
 
     def decorator(func):
@@ -58,27 +45,26 @@ def logged(exception_type, mode="console"):
         def wrapper(*args, **kwargs):
             try:
                 return func(*args, **kwargs)
-
             except exception_type as e:
                 logger.error(f"{exception_type.__name__}: {str(e)}")
                 raise
-
         return wrapper
 
     return decorator
 
 
 # ==========================
-#     MAIN CLASS
+#     MAIN FILE CLASS
 # ==========================
 
 class WorkWithFile:
     def __init__(self, filename: str):
         self.filename = filename
 
-        # Check file existence
+        # Auto-create file if missing
         if not os.path.exists(self.filename):
-            raise FileNotFound(f"File '{self.filename}' not found!")
+            with open(self.filename, "w", encoding="utf-8") as f:
+                f.write("")
 
         # Check accessibility
         try:
@@ -87,49 +73,40 @@ class WorkWithFile:
         except (OSError, IOError):
             raise FileCorrupted("File is corrupted or inaccessible!")
 
-    # --------------------------
-    #           READ
-    # --------------------------
-    @logged(FileCorrupted, mode="console")
+    @logged(FileCorrupted)
     def read(self):
         with open(self.filename, "r", encoding="utf-8") as f:
             return f.read()
 
-    # --------------------------
-    #           WRITE
-    # --------------------------
-    @logged(FileCorrupted, mode="file")
-    def write(self, text: str):
-        with open(self.filename, "w", encoding="utf-8") as f:
-            f.write(text)
-
-    # --------------------------
-    #           APPEND
-    # --------------------------
     @logged(FileCorrupted, mode="file")
     def append(self, text: str):
         with open(self.filename, "a", encoding="utf-8") as f:
-            f.write(text)
+            f.write(text + "\n")
 
 
 # ==========================
-#      DEMO (optional)
+#      TERMINAL INPUT
 # ==========================
 
 if __name__ == "__main__":
-    try:
-        file = WorkWithFile("text.txt")
+    file = WorkWithFile("text.txt")
 
-        print("=== READ ===")
+    print("==== FILE LOGGER ====")
+    print("Вводь текст, він буде автоматично записаний у text.txt")
+    print("Напиши 'exit' щоб вийти.\n")
+
+    while True:
+        user_input = input("> ")
+
+        if user_input.lower() == "exit":
+            print("\n=== FINAL FILE CONTENT ===")
+            print(file.read())
+            print("==========================")
+            break
+
+        file.append(user_input)
+
+        print("✔ Записано!")
+        print("Поточний вміст файлу:")
         print(file.read())
-
-        print("\n=== WRITE ===")
-        file.write("Hello!\n")
-
-        print("\n=== APPEND ===")
-        file.append("Appended line.\n")
-
-    except FileNotFound as e:
-        print(e)
-    except FileCorrupted as e:
-        print(e)
+        print("----------------------")
