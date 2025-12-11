@@ -92,8 +92,8 @@ if __name__ == "__main__":
     file = WorkWithFile("text.txt")
 
     print("==== FILE LOGGER ====")
-    print("Вводь текст, він буде автоматично записаний у text.txt")
-    print("Напиши 'exit' щоб вийти.\n")
+    print("Type anything to append it into text.txt")
+    print("Type 'exit' to quit.\n")
 
     while True:
         user_input = input("> ")
@@ -106,7 +106,7 @@ if __name__ == "__main__":
 
         file.append(user_input)
 
-        print("✔ Записано!")
-        print("Поточний вміст файлу:")
+        print("✔ Saved!")
+        print("Current file contents:")
         print(file.read())
         print("----------------------")
